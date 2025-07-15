@@ -28,6 +28,11 @@ define("recaptchaV3SiteKey", 'YOUR_SITE_KEY_HERE');
 // reCAPTCHA V3 Secret Key
 define("recaptchaV3SecretKey", 'YOUR_SECRET_KEY_HERE');
 
+// Enable authentication requirement for shortening links
+// true = only authenticated users can shorten, false = anyone can shorten
+// default: false
+define('requireAuth', false);
+
 // Enables the custom URL field
 // true or false
 define('enableCustomURL', true);
