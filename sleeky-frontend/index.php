@@ -6,6 +6,9 @@
 	// Start YOURLS engine
 	require_once( dirname(__FILE__).'/includes/load-yourls.php' );
 
+	// Check if user is authenticated
+	$is_authenticated = yourls_is_valid_user();
+
 	// URL of the public interface
 	$page = YOURLS_SITE . '/index.php' ;
 
@@ -13,7 +16,7 @@
 	$shorturl = $message = $title = $status = '';
 
 	// Part to be executed if FORM has been submitted
-	if ( isset( $_REQUEST['url'] ) && $_REQUEST['url'] != 'http://' ) {
+	if ( isset( $_REQUEST['url'] ) && $_REQUEST['url'] != 'http://' && (!requireAuth || $is_authenticated === true) ) {
 		if (enableRecaptcha) {
 			// Use reCAPTCHA
 			$token = $_POST['token'];
@@ -76,7 +79,7 @@
 		<div class="row justify-content-center align-items-center h-100">
 			<div class="col-12 col-lg-10 col-xl-8 col-xxl-5 mt-5">
 				<div class="card border-0 mt-5">
-					<?php if( isset($status) && $status == 'success' ):  ?>
+					<?php if( (!requireAuth || $is_authenticated === true) && isset($status) && $status == 'success' ):  ?>
 						<?php $url = preg_replace("(^https?://)", "", $shorturl );  ?>
 
 						<div class="close-container text-end mt-3 me-3">
@@ -96,7 +99,43 @@
 								</div>
 							</div>
 						</div>
+					<?php elseif( requireAuth && $is_authenticated !== true ): ?>
+						<!-- Login form for unauthenticated users -->
+						<div class="text-center">
+							<img src="<?php echo YOURLS_SITE ?><?php echo logo ?>" alt="Logo" width="95px" class="mt-n5">
+						</div>
+						<div class="card-body px-md-5">
+							<h2 class="text-uppercase text-center mb-4">Login Required</h2>
+							<p class="text-center mb-4">Please log in to access the link shortening service.</p>
+							
+							<?php if( isset($_REQUEST['username']) || isset($_REQUEST['password']) ): ?>
+								<div class="alert alert-danger alert-dismissible fade show" role="alert">
+									<span><?php echo $is_authenticated; ?></span>
+									<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+								</div>
+							<?php endif; ?>
+
+							<form method="post" action="">
+								<div class="mb-3">
+									<label for="username" class="form-label">Username</label>
+									<input type="text" id="username" name="username" class="form-control" autocomplete="username" required>
+								</div>
+								<div class="mb-3">
+									<label for="password" class="form-label">Password</label>
+									<input type="password" id="password" name="password" class="form-control" autocomplete="current-password" required>
+								</div>
+								<div class="d-grid">
+									<?php echo yourls_nonce_field('admin_login', 'nonce', false, false); ?>
+									<button type="submit" class="btn btn-primary text-uppercase">Login</button>
+								</div>
+							</form>
+							
+							<div class="text-center mt-3">
+								<a href="<?php echo YOURLS_SITE; ?>/admin/" class="text-decoration-none">Go to Admin Area</a>
+							</div>
+						</div>
 					<?php else: ?>
+						<!-- Shortening form for authenticated users -->
 						<div class="text-center">
 							<img src="<?php echo YOURLS_SITE ?><?php echo logo ?>" alt="Logo" width="95px" class="mt-n5">
 						</div>
@@ -112,6 +151,13 @@
 								<?php endif; ?>
 							<?php endif; ?>
 
+							<?php if( defined('YOURLS_USER') ): ?>
+								<div class="alert alert-success alert-dismissible fade show" role="alert">
+									<span>Welcome, <?php echo YOURLS_USER; ?>!</span>
+									<a href="<?php echo YOURLS_SITE; ?>/admin/index.php?action=logout&nonce=<?php echo yourls_create_nonce('admin_logout', 'logout'); ?>" class="alert-link ms-2">Logout</a>
+								</div>
+							<?php endif; ?>
+
 							<form id="shortenlink" method="post" action="">
 								<div class="input-group input-group-block mt-4 mb-3">
 									<input type="url" name="url" id="url" class="form-control text-uppercase" placeholder="PASTE URL, SHORTEN &amp; SHARE" aria-label="PASTE URL, SHORTEN &amp; SHARE" aria-describedby="shorten-button" required>
@@ -119,7 +165,7 @@
 								</div>
 								<?php if (enableCustomURL): ?>
 									<a class="btn btn-sm btn-white text-black-50 text-uppercase" data-bs-toggle="collapse" href="#customise-link" role="button" aria-expanded="false" aria-controls="customise-link">
-										<img src="<?php echo YOURLS_SITE ?>/frontend/assets/svg/custom-url.svg" alt="Options"> Customise Link
+										<img src="<?php echo YOURLS_SITE ?>/frontend/assets/svg/custom-url.svg" alt="Options"> Customize Link
 									</a>
 									<div class="collapse" id="customise-link">
 										<div class="mt-2 card card-body">
@@ -135,10 +181,10 @@
 					<?php endif; ?>
 				</div>
 				<div class="d-flex flex-column flex-md-row align-items-center my-3">
-					<span class="text-white fw-light">&copy; <?php echo date("Y"); ?> <?php echo shortTitle ?></span>
+					<span class="text-white fw-light" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);">&copy; <?php echo date("Y"); ?> <?php echo shortTitle ?></span>
 					<div class="ms-3">
 						<?php foreach ($footerLinks as $key => $val): ?>
-							<a class="bold-link me-3 text-white text-decoration-none" href="<?php echo $val ?>"><span><?php echo $key ?></span></a>
+							<a class="bold-link me-3 text-white text-decoration-none" href="<?php echo $val ?>" style="text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);"><span><?php echo $key ?></span></a>
 						<?php endforeach ?>
 					</div>
 				</div>

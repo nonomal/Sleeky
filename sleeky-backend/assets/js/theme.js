@@ -133,8 +133,7 @@ $( document ).ready(function() {
     } else if (/Powered by/.test($(this).text())) {
         // Update footer
         var content = $(this).html();
-        var i = 77
-        var updated_content = "Running on" + content.slice(13, i) + '& <a href="https://sleeky.flynntes.com/" title="Sleeky">Sleeky</a>' + content.slice(i-1)
+        var updated_content = `Running on <br> ${content.replace(/Powered by.*?(?=<|$)/i, '')} <br> <a href="https://sleeky.flynntes.com/" title="Sleeky">Sleeky</a> v 2.6.0`;
         $(this).html(updated_content);
       }
   });
